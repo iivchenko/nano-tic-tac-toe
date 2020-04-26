@@ -2,3 +2,4 @@ nuget FSharp.Core
 nuget MonoGame.Framework.DesktopGL.Core
 nuget MonoGame.Content.Builder
 nuget Myra
+nuget Microsoft.Extensions.FileProviders.Embedded

@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <MonoGameContentReference Include="**\*.mgcb" />
+    <EmbeddedResource Include="..\..\.version" />
+    <Compile Include="Version.fs" />
     <Compile Include="TheGame.fs" />
     <Compile Include="TheEntry.fs" />
   </ItemGroup>
