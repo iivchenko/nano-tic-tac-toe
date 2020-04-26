@@ -31,5 +31,10 @@ jobs:
       run: dotnet publish .\src\NanoTicTacToe.Clients.Desktop\NanoTicTacToe.Clients.Desktop.fsproj --runtime win-x64 --self-contained true -o .\publish\
     - uses: actions/upload-artifact@v1
       with:
-       name: artifacts
+       name: artifacts 
        path: publish
+    - name: Download artifact
+      uses: actions/download-artifact@v1.0.0
+      with:
+        name: artifact2
+        path: publish
