@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Winexe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>nano-tic-tac-toe</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="**\*.mgcb" />
+    <Compile Include="TheGame.fs" />
+    <Compile Include="TheEntry.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Content\**" />
+    <None Remove="Content\bin\**" />
+    <None Remove="Content\obj\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Flame\Flame.fsproj" />
+    <ProjectReference Include="..\NanoTicTacToe.Game\NanoTicTacToe.Game.fsproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

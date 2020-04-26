@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Units.fs" />
+    <Compile Include="Random.fs" />
+    <Compile Include="Vector.fs" />
+    <Compile Include="Graphics.fs" />
+    <Compile Include="MouseInput.fs" />
+    <Compile Include="KeyboardInput.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

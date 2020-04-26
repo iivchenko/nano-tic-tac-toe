@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Infrastructure\Screen.fs" />
+    <Compile Include="Infrastructure\Messaging.fs" />
+    <Compile Include="Domain\World.fs" />
+    <Compile Include="Scenes\MainMenuScene.fs" />
+    <Compile Include="Scenes\GamePlayScene.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Flame\Flame.fsproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+
+</Project>

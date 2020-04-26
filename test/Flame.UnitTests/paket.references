@@ -1,0 +1,5 @@
+nuget FSharp.Core
+nuget MonoGame.Framework.DesktopGL.Core
+nuget NUnit
+nuget NUnit3TestAdapter
+nuget Microsoft.NET.Test.Sdk

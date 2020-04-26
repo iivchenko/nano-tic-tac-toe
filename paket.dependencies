@@ -1,0 +1,13 @@
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Core
+nuget MonoGame.Framework.DesktopGL.Core
+nuget MonoGame.Content.Builder
+nuget Myra
+nuget nunit
+nuget FsUnit
+nuget NUnit3TestAdapter
+nuget Microsoft.NET.Test.Sdk
+
+storage: none
+framework: netcore3.0, netstandard2.0, netstandard2.1
