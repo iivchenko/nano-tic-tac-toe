@@ -32,5 +32,5 @@ jobs:
     - name: Artifacts
       uses: actions/upload-artifact@v1
       with:
-       name: ${{ "nano-tic-tac-toe-win-x64-v0.0.0." + github.run_number }}
+       name: ${{ 'nano-tic-tac-toe-win-x64-v0.0.0.' + github.run_number }}
        path: publish
