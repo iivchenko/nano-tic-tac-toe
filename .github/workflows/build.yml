@@ -27,3 +27,9 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+    - name: Publish
+      run: dotnet publish .\src\NanoTicTacToe.Clients.Desktop\NanoTicTacToe.Clients.Desktop.fsproj --runtime win-x64 --self-contained true -o .\publish\
+    - uses: actions/upload-artifact@v1
+      with:
+       name: artifacts
+       path: publish
