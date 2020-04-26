@@ -16,7 +16,7 @@ jobs:
       id: version
       uses: juliangruber/read-file-action@v1
       with:
-        path: ./.version
+        path: .\.version
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
