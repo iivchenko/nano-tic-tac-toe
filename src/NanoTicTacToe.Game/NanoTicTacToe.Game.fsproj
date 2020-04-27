@@ -5,11 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Infrastructure\Screen.fs" />
-    <Compile Include="Infrastructure\Messaging.fs" />
     <Compile Include="Domain\World.fs" />
-    <Compile Include="Scenes\MainMenuScene.fs" />
-    <Compile Include="Scenes\GamePlayScene.fs" />
+    <Compile Include="MainMenuScene.fs" />
+    <Compile Include="GamePlayScene.fs" />
+    <Compile Include="Scene.fs" />
   </ItemGroup>
 
   <ItemGroup>

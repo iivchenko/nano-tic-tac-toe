@@ -7,9 +7,11 @@
     <Compile Include="Units.fs" />
     <Compile Include="Random.fs" />
     <Compile Include="Vector.fs" />
+    <Compile Include="Content.fs" />
     <Compile Include="Graphics.fs" />
     <Compile Include="MouseInput.fs" />
     <Compile Include="KeyboardInput.fs" />
+    <Compile Include="Game.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
