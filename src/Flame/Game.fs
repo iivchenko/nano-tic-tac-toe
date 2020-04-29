@@ -2,11 +2,14 @@
 
 open Microsoft.Xna.Framework
 open Microsoft.Xna.Framework.Graphics
+
 open Flame.Content
+open Flame.Graphics
+open Flame.Input
 
 type GameSettings =
-    { ScreenWidth: int
-      ScreenHeight: int }
+    { ScreenWidth: float32<pixel>
+      ScreenHeight: float32<pixel> }
 
 type GameApi = 
     { LoadFont: string -> Font 
@@ -14,6 +17,7 @@ type GameApi =
 
 type GameState<'TState> =
     { Api: GameApi
+      Settings: GameSettings
       State: 'TState }
 
 type GameEvent<'TState> = 
@@ -23,8 +27,8 @@ type GameEvent<'TState> =
 type Game<'TState> (
                     settings: GameSettings, 
                     state: 'TState, 
-                    update: GameState<'TState> -> float32<second> -> GameEvent<'TState>,
-                    draw: 'TState -> float32<second> -> unit) as this =
+                    update: GameState<'TState> -> Input list -> float32<second> -> GameEvent<'TState>,
+                    draw: 'TState -> float32<second> -> Graphics) as this =
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new GraphicsDeviceManager(this)
@@ -36,6 +40,7 @@ type Game<'TState> (
                                 LoadFont    = (fun name -> this.Content.Load<SpriteFont>(name) |> Font)
                                 LoadTexture = (fun name -> this.Content.Load<Texture2D>(name)  |> Texture)
                             }
+                        Settings = settings
                         State = state
                     }
     let mutable spriteBatch = Unchecked.defaultof<SpriteBatch>
@@ -51,8 +56,8 @@ type Game<'TState> (
 
         base.Initialize()
 
-        graphics.PreferredBackBufferWidth  <- settings.ScreenWidth
-        graphics.PreferredBackBufferHeight <- settings.ScreenHeight
+        graphics.PreferredBackBufferWidth  <- settings.ScreenWidth  |> int
+        graphics.PreferredBackBufferHeight <- settings.ScreenHeight |> int
         
         this.Window.AllowUserResizing <- true
 
@@ -64,7 +69,9 @@ type Game<'TState> (
 
         match this.IsActive with 
         | true -> 
-            match update state (delta gameTime) with
+            let mouse = Mouse(Mouse.state())
+
+            match update state [mouse] (delta gameTime) with
             | None state' -> state <- { state with State = state' }
             | Exit -> this.Exit()
         | false -> ()
@@ -75,10 +82,9 @@ type Game<'TState> (
         
         graphics.GraphicsDevice.Clear(Color.CornflowerBlue)
         
-        draw state.State (delta gameTime)
-
+        draw state.State (delta gameTime) |> Graphics.draw spriteBatch
 
 module Game = 
-    let run settings (state: 'TState) (update: GameState<'TState> -> float32<second> -> GameEvent<'TState>) (draw: 'TState -> float32<second> -> unit) = 
+    let run settings (state: 'TState) (update: GameState<'TState> -> Input list -> float32<second> -> GameEvent<'TState>) (draw: 'TState -> float32<second> -> Graphics) = 
         let game = new Game<'TState>(settings, state, update, draw)
         game.Run()
