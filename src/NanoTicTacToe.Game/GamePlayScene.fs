@@ -30,8 +30,7 @@ type GamePlaySceneState =
       Grid: (int * int * Cell) list
       Back: GamePlayBackInfo
       Status: GamePlayStatus
-      Move: Player 
-      PreivosMouseLeftButton: MouseButtonState}
+      Move: Player }
 
 type GamePlayEvent =
     | None of state:GamePlaySceneState
@@ -52,10 +51,7 @@ module GamePlayScene =
             (2, 0, Empty 3); (2, 1, Empty 2); (2, 2, Empty 3);
         ]
 
-    let private filterMouse input = 
-        match input with 
-        | Mouse _ -> true
-        | _       -> false
+    let private mouseClick events = events |> List.tryFind (fun event -> match event with | GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, _)) -> true | _ -> false)
 
     let private map row column value font xs os (Vector(x, y)) (width:float32<pixel>) (height:float32<pixel>) =
         match value with
@@ -103,38 +99,32 @@ module GamePlayScene =
             Status = Playing
             Move = Human(X)
             Back = { Sprite = Sprite(position, back, Vector.init 1.0f 1.0f); CellWidth = width / 3.0f; CellHeight = height / 3.0f }
-            PreivosMouseLeftButton = MouseButtonState.Released
         }
 
-    let update state inputs =
+    let update state events =
         match state.Status with
         | Playing -> 
             match state.Move with
             | Human(sym) -> 
-                let input = inputs |> List.filter filterMouse |> List.exactlyOne
-                match input with
-                | Mouse mouse when mouse.LeftButton <> state.PreivosMouseLeftButton -> 
-                    if mouse.LeftButton = MouseButtonState.Released && Graphics.inBounds mouse.Position state.Back.Sprite
-                        then 
-                            let (Vector(x,y)) = mouse.Position
-                            let (Vector(xo, yo)) = state.Origin
-                            let column = (x - xo) / state.Back.CellWidth |> int
-                            let raw = (y - yo) / state.Back.CellHeight |> int
-                            let cell = Grid.get state.Grid raw column 
+                match mouseClick events with
+                | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Back.Sprite -> 
+                    let (Vector(x,y)) = position
+                    let (Vector(xo, yo)) = state.Origin
+                    let column = (x - xo) / state.Back.CellWidth |> int
+                    let raw = (y - yo) / state.Back.CellHeight |> int
+                    let cell = Grid.get state.Grid raw column 
 
-                            match cell with
-                            | Empty _ -> 
-                                let grid = Grid.update state.Grid raw column (Occupied(state.Move))                                
+                    match cell with
+                    | Empty _ -> 
+                        let grid = Grid.update state.Grid raw column (Occupied(state.Move))                                
 
-                                if [0..2] |> List.exists (winHumanRaw grid) || [0..2] |> List.exists (winHumanColumn grid) || (winHumanMainDiagnal grid) || (winHumanSecondDiagnal grid)
-                                    then { state with PreivosMouseLeftButton = mouse.LeftButton; Grid = grid; Move = AI(O); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Victory")); } 
-                                    elif grid |> List.forall (fun (_, _, cell) -> match cell with | Occupied _ -> true | _ -> false) 
-                                        then { state with PreivosMouseLeftButton = mouse.LeftButton; Grid = grid; Move = AI(O); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")); } 
-                                    else { state with PreivosMouseLeftButton = mouse.LeftButton; Grid = grid; Move = AI(O) }
+                        if [0..2] |> List.exists (winHumanRaw grid) || [0..2] |> List.exists (winHumanColumn grid) || (winHumanMainDiagnal grid) || (winHumanSecondDiagnal grid)
+                            then { state with Grid = grid; Move = AI(O); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Victory")); } 
+                            elif grid |> List.forall (fun (_, _, cell) -> match cell with | Occupied _ -> true | _ -> false) 
+                                then { state with Grid = grid; Move = AI(O); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")); } 
+                            else { state with Grid = grid; Move = AI(O) }
 
-                            | _ -> { state with PreivosMouseLeftButton = mouse.LeftButton; }
-                        else 
-                            { state with PreivosMouseLeftButton = mouse.LeftButton }
+                    | _ -> state
                 | _ -> state
 
             | AI(sym) -> 
@@ -148,12 +138,8 @@ module GamePlayScene =
                     else { state with Grid = grid; Move = Human(X) }
 
         | Finish _ -> 
-            let input = inputs |> List.filter filterMouse |> List.exactlyOne
-            match input with
-            | Mouse mouse when mouse.LeftButton <> state.PreivosMouseLeftButton -> 
-                if mouse.LeftButton = MouseButtonState.Released
-                    then { state with PreivosMouseLeftButton = mouse.LeftButton; Grid = grid; Status = Playing; }
-                    else { state with PreivosMouseLeftButton = mouse.LeftButton } 
+            match mouseClick events with
+            | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) -> { state with Grid = grid; Status = Playing; }
             | _ -> state
 
     let draw state = 

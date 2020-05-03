@@ -12,7 +12,7 @@ type SceneState =
 
 module Scene = 
 
-    let update state inputs _ = 
+    let update state events _ = 
         let api = state.Api
         let gameState = state.State
         let settings = state.Settings
@@ -20,13 +20,13 @@ module Scene =
 
         match sceneState with 
         | MainMenuScene scene -> 
-            match MainMenuScene.update scene inputs with 
-            | MainMenuEvent.None state -> { gameState with Scene = (MainMenuScene state) } |> GameEvent.None
-            | MainMenuEvent.StartGame -> { gameState with Scene = (GamePlayScene (GamePlayScene.init api settings)) } |> GameEvent.None
-            | MainMenuEvent.Exit -> GameEvent.Exit
-        | GamePlayScene state ->  { gameState with Scene = (GamePlayScene(GamePlayScene.update state inputs)) } |> GameEvent.None
+            match MainMenuScene.update scene events with 
+            | MainMenuEvent.None state -> { gameState with Scene = (MainMenuScene state) } |> GameCommand.None
+            | MainMenuEvent.StartGame -> { gameState with Scene = (GamePlayScene (GamePlayScene.init api settings)) } |> GameCommand.None
+            | MainMenuEvent.Exit -> GameCommand.Exit
+        | GamePlayScene state ->  { gameState with Scene = (GamePlayScene(GamePlayScene.update state events)) } |> GameCommand.None
         | EntryScene ->
-            { gameState with Scene = (MainMenuScene(MainMenuScene.init api settings)) } |> GameEvent.None
+            { gameState with Scene = (MainMenuScene(MainMenuScene.init api settings)) } |> GameCommand.None
 
     let draw state _ =
         match state.Scene with 

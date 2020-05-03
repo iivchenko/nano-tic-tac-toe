@@ -18,10 +18,7 @@ type MainMenuEvent =
 
 module MainMenuScene = 
 
-    let private filterMouse input = 
-        match input with 
-        | Mouse _ -> true
-        | _       -> false
+    let private mouseClick events = events |> List.tryFind (fun event -> match event with | GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, _)) -> true | _ -> false)
 
     let init api settings = 
         let h1 = api.LoadFont "Fonts/H1"
@@ -41,19 +38,10 @@ module MainMenuScene =
 
         { Header = Text(headerP, h1, Color.white, header); Start = Text(startP, h2, Color.white, start); Exit = Text(exitP, h2, Color.white, exit); PreivosMouseLeftButton = MouseButtonState.Released; }
 
-    let update state inputs =
-        let input = inputs |> List.filter filterMouse |> List.exactlyOne
-
-        match input with
-        | Mouse mouse when mouse.LeftButton <> state.PreivosMouseLeftButton -> 
-            if mouse.LeftButton = MouseButtonState.Released 
-                then if Graphics.inBounds mouse.Position state.Exit
-                        then MainMenuEvent.Exit
-                        elif Graphics.inBounds mouse.Position state.Start
-                        then MainMenuEvent.StartGame
-                        else MainMenuEvent.None { state with PreivosMouseLeftButton = mouse.LeftButton; }
-                else MainMenuEvent.None { state with PreivosMouseLeftButton = mouse.LeftButton; }
-                
+    let update state events =
+        match mouseClick events with 
+        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Exit  -> MainMenuEvent.Exit
+        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Start -> MainMenuEvent.StartGame
         | _ -> MainMenuEvent.None state
 
     let draw state = Graphics([state.Header; state.Start; state.Exit])
