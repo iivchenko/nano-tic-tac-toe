@@ -49,9 +49,11 @@ module MainMenuScene =
             if mouse.LeftButton = MouseButtonState.Released 
                 then if Graphics.inBounds mouse.Position state.Exit
                         then MainMenuEvent.Exit
+                        elif Graphics.inBounds mouse.Position state.Start
+                        then MainMenuEvent.StartGame
                         else MainMenuEvent.None { state with PreivosMouseLeftButton = mouse.LeftButton; }
                 else MainMenuEvent.None { state with PreivosMouseLeftButton = mouse.LeftButton; }
                 
         | _ -> MainMenuEvent.None state
 
-    let draw state = Graphics(Vector.init 0.0f<pixel> 0.0f<pixel>, [state.Header; state.Start; state.Exit])
+    let draw state = Graphics([state.Header; state.Start; state.Exit])

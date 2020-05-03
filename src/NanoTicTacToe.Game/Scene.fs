@@ -12,7 +12,7 @@ type SceneState =
 
 module Scene = 
 
-    let update state inputs delta = 
+    let update state inputs _ = 
         let api = state.Api
         let gameState = state.State
         let settings = state.Settings
@@ -22,14 +22,14 @@ module Scene =
         | MainMenuScene scene -> 
             match MainMenuScene.update scene inputs with 
             | MainMenuEvent.None state -> { gameState with Scene = (MainMenuScene state) } |> GameEvent.None
-            | MainMenuEvent.StartGame -> GameEvent.Exit
+            | MainMenuEvent.StartGame -> { gameState with Scene = (GamePlayScene (GamePlayScene.init api settings)) } |> GameEvent.None
             | MainMenuEvent.Exit -> GameEvent.Exit
-        | GamePlayScene state ->  { gameState with Scene = (GamePlayScene(GamePlayScene.update state delta)) } |> GameEvent.None
+        | GamePlayScene state ->  { gameState with Scene = (GamePlayScene(GamePlayScene.update state inputs)) } |> GameEvent.None
         | EntryScene ->
             { gameState with Scene = (MainMenuScene(MainMenuScene.init api settings)) } |> GameEvent.None
 
-    let draw state delta =
+    let draw state _ =
         match state.Scene with 
         | MainMenuScene state -> MainMenuScene.draw state
-        | GamePlayScene state -> GamePlayScene.draw state delta
+        | GamePlayScene state -> GamePlayScene.draw state
         | _ -> raise (new exn("Unknown Scene!"))
