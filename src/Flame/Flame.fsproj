@@ -12,7 +12,6 @@
     <Compile Include="Graphics.fs" />
     <Compile Include="MouseInput.fs" />
     <Compile Include="KeyboardInput.fs" />
-    <Compile Include="Input.fs" />
     <Compile Include="Game.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

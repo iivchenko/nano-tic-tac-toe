@@ -12,11 +12,9 @@ type SceneState =
 
 module Scene = 
 
-    let update state events _ = 
-        let api = state.Api
-        let gameState = state.State
-        let settings = state.Settings
-        let sceneState = state.State.Scene
+    let update state events api settings _ = 
+        let gameState = state
+        let sceneState = state.Scene
 
         match sceneState with 
         | MainMenuScene scene -> 

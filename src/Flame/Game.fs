@@ -16,11 +16,6 @@ type GameApi =
     { LoadFont: string -> Font 
       LoadTexture: string -> Texture }
 
-type GameState<'TState> =
-    { Api: GameApi
-      Settings: GameSettings
-      State: 'TState }
-
 type GameCommand<'TState> = 
     | None of state: 'TState
     | Exit
@@ -40,22 +35,18 @@ type GameEvent =
 type Game<'TState> (
                     settings: GameSettings, 
                     state: 'TState, 
-                    update: GameState<'TState> -> GameEvent list -> float32<second> -> GameCommand<'TState>,
+                    update: 'TState -> GameEvent list -> GameApi -> GameSettings -> float32<second> -> GameCommand<'TState>,
                     draw: 'TState -> float32<second> -> Graphics) as this =
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new GraphicsDeviceManager(this)
+    let api = 
+            {
+                LoadFont    = (fun name -> this.Content.Load<SpriteFont>(name) |> Font)
+                LoadTexture = (fun name -> this.Content.Load<Texture2D>(name)  |> Texture)
+            }
 
-    let mutable state = 
-                    { 
-                        Api = 
-                            {
-                                LoadFont    = (fun name -> this.Content.Load<SpriteFont>(name) |> Font)
-                                LoadTexture = (fun name -> this.Content.Load<Texture2D>(name)  |> Texture)
-                            }
-                        Settings = settings
-                        State = state
-                    }
+    let mutable state = state
     let mutable mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState()
     let mutable spriteBatch = Unchecked.defaultof<SpriteBatch>
 
@@ -93,8 +84,8 @@ type Game<'TState> (
             let events = handleMouseInput mouseState mouseState'
             mouseState <- mouseState'
 
-            match update state events (delta gameTime) with
-            | None state' -> state <- { state with State = state' }
+            match update state events api settings (delta gameTime) with
+            | None state' -> state <- state'
             | Exit -> this.Exit()
         | false -> ()
 
@@ -104,9 +95,9 @@ type Game<'TState> (
         
         graphics.GraphicsDevice.Clear(Color.CornflowerBlue)
         
-        draw state.State (delta gameTime) |> Graphics.draw spriteBatch
+        draw state (delta gameTime) |> Graphics.draw spriteBatch
 
 module Game = 
-    let run settings (state: 'TState) (update: GameState<'TState> -> GameEvent list -> float32<second> -> GameCommand<'TState>) (draw: 'TState -> float32<second> -> Graphics) = 
+    let run settings (state: 'TState) (update: 'TState -> GameEvent list -> GameApi -> GameSettings -> float32<second> -> GameCommand<'TState>) (draw: 'TState -> float32<second> -> Graphics) = 
         let game = new Game<'TState>(settings, state, update, draw)
         game.Run()
