@@ -17,7 +17,7 @@ type GameApi =
       LoadTexture: string -> Texture }
 
 type GameCommand<'TState> = 
-    | None of state: 'TState
+    | Continue of state: 'TState
     | Exit
 
 type MouseButton = 
@@ -36,7 +36,7 @@ type Game<'TState> (
                     settings: GameSettings, 
                     state: 'TState, 
                     update: 'TState -> GameEvent list -> GameApi -> GameSettings -> float32<second> -> GameCommand<'TState>,
-                    draw: 'TState -> float32<second> -> Graphics) as this =
+                    draw: 'TState -> float32<second> -> Graphics option) as this =
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new GraphicsDeviceManager(this)
@@ -54,8 +54,8 @@ type Game<'TState> (
 
     let handleMouseInput (state: Microsoft.Xna.Framework.Input.MouseState) (state': Microsoft.Xna.Framework.Input.MouseState) =
         seq {
-            yield if state'.Position   <> state.Position   then state'.Position |> Utils.pointToPixelVector |> MouseEvent.Moved |> Some else Option.None
-            yield if state'.LeftButton <> state.LeftButton then MouseEvent.Button(MouseButton.Left, state'.LeftButton |> MouseInput.toButtonState,  Utils.pointToPixelVector state'.Position) |> Some else Option.None
+            yield if state'.Position   <> state.Position   then state'.Position |> Utils.pointToPixelVector |> MouseEvent.Moved |> Some else None
+            yield if state'.LeftButton <> state.LeftButton then MouseEvent.Button(MouseButton.Left, state'.LeftButton |> MouseInput.toButtonState,  Utils.pointToPixelVector state'.Position) |> Some else None
         } |> Seq.filter Option.isSome |> Seq.map Option.get |> Seq.map GameEvent.Mouse |> Seq.toList
 
     override _.LoadContent() =
@@ -85,7 +85,7 @@ type Game<'TState> (
             mouseState <- mouseState'
 
             match update state events api settings (delta gameTime) with
-            | None state' -> state <- state'
+            | Continue state' -> state <- state'
             | Exit -> this.Exit()
         | false -> ()
 
@@ -93,11 +93,13 @@ type Game<'TState> (
 
     override _.Draw (gameTime: GameTime) =
         
-        graphics.GraphicsDevice.Clear(Color.CornflowerBlue)
-        
-        draw state (delta gameTime) |> Graphics.draw spriteBatch
+        match draw state (delta gameTime) with
+        | Some g -> 
+            graphics.GraphicsDevice.Clear(Color.CornflowerBlue)
+            Graphics.draw spriteBatch g
+        | _ -> ()
 
 module Game = 
-    let run settings (state: 'TState) (update: 'TState -> GameEvent list -> GameApi -> GameSettings -> float32<second> -> GameCommand<'TState>) (draw: 'TState -> float32<second> -> Graphics) = 
+    let run settings (state: 'TState) (update: 'TState -> GameEvent list -> GameApi -> GameSettings -> float32<second> -> GameCommand<'TState>) (draw: 'TState -> float32<second> -> Graphics option) = 
         let game = new Game<'TState>(settings, state, update, draw)
         game.Run()

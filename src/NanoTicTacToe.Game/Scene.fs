@@ -2,32 +2,22 @@
 
 open Flame
 
-type Scene = 
-    | EntryScene 
-    | MainMenuScene of state: MainMenuSceneState
-    | GamePlayScene of state: GamePlaySceneState
-
-type SceneState = 
-    { Scene: Scene }
-
 module Scene = 
 
     let update state events api settings _ = 
-        let gameState = state
-        let sceneState = state.Scene
 
-        match sceneState with 
-        | MainMenuScene scene -> 
-            match MainMenuScene.update scene events with 
-            | MainMenuEvent.None state -> { gameState with Scene = (MainMenuScene state) } |> GameCommand.None
-            | MainMenuEvent.StartGame -> { gameState with Scene = (GamePlayScene (GamePlayScene.init api settings)) } |> GameCommand.None
-            | MainMenuEvent.Exit -> GameCommand.Exit
-        | GamePlayScene state ->  { gameState with Scene = (GamePlayScene(GamePlayScene.update state events)) } |> GameCommand.None
-        | EntryScene ->
-            { gameState with Scene = (MainMenuScene(MainMenuScene.init api settings)) } |> GameCommand.None
+        match state with 
+        | MainMenuScene scene -> MainMenuScene.update scene events |> GameCommand.Continue
+        | GamePlayScene state -> GamePlayScene.update state events |> GamePlayScene |> GameCommand.Continue
+        | InitGamePlay -> GamePlayScene.init api settings |> GamePlayScene |> GameCommand.Continue
+        | InitMainMenu -> MainMenuScene.init api settings |> MainMenuScene |> GameCommand.Continue
+        | Scenes.Exit -> GameCommand.Exit
 
     let draw state _ =
-        match state.Scene with 
-        | MainMenuScene state -> MainMenuScene.draw state
-        | GamePlayScene state -> GamePlayScene.draw state
+        match state with 
+        | MainMenuScene state -> MainMenuScene.draw state |> Some
+        | GamePlayScene state -> GamePlayScene.draw state |> Some
+        | InitMainMenu
+        | InitGamePlay
+        | Scenes.Exit -> None
         | _ -> raise (new exn("Unknown Scene!"))

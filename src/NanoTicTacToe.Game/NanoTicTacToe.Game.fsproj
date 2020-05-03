@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Scenes.fs" />
     <Compile Include="MainMenuScene.fs" />
     <Compile Include="GamePlayScene.fs" />
     <Compile Include="Scene.fs" />

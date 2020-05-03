@@ -5,37 +5,6 @@ open Flame.Graphics
 open Flame.Content
 open Flame.Input
 
-type Sym = | X | O
-type Player = | AI of Sym | Human of Sym
-
-type Cell =
-| Empty of value: int
-| Occupied of Player
-
-type GamePlaySceneContent =
-    { X: Texture
-      O: Texture 
-      Font: Font }
-
-type GamePlayBackInfo = 
-    { Sprite: Graphics
-      CellWidth: float32<pixel>
-      CellHeight: float32<pixel> }
-
-type GamePlayStatus = | Playing | Finish of message: Graphics
-
-type GamePlaySceneState = 
-    { Content: GamePlaySceneContent
-      Origin: Vector<pixel>
-      Grid: (int * int * Cell) list
-      Back: GamePlayBackInfo
-      Status: GamePlayStatus
-      Move: Player }
-
-type GamePlayEvent =
-    | None of state:GamePlaySceneState
-    | Exit
-
 module Grid = 
     let raw grid index = grid |> List.where (fun (raw, _, _) -> raw = index)
     let column grid index = grid |> List.where (fun (_, column, _) -> column = index)

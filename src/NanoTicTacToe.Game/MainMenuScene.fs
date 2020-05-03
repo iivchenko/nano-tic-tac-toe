@@ -5,17 +5,6 @@ open Flame.Content
 open Flame.Graphics
 open Flame.Input
 
-type MainMenuSceneState = 
-    { Header: Graphics 
-      Start:  Graphics 
-      Exit:   Graphics 
-      PreivosMouseLeftButton: MouseButtonState }
-
-type MainMenuEvent =
-    | None of state: MainMenuSceneState
-    | StartGame
-    | Exit
-
 module MainMenuScene = 
 
     let private mouseClick events = events |> List.tryFind (fun event -> match event with | GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, _)) -> true | _ -> false)
@@ -36,12 +25,12 @@ module MainMenuScene =
         let (Vector(exitW, exitH)) = Font.length h2 exit
         let exitP = Vector.init (settings.ScreenWidth / 2.0f - exitW / 2.0f) (settings.ScreenHeight * 0.51f + exitH)
 
-        { Header = Text(headerP, h1, Color.white, header); Start = Text(startP, h2, Color.white, start); Exit = Text(exitP, h2, Color.white, exit); PreivosMouseLeftButton = MouseButtonState.Released; }
+        { Header = Text(headerP, h1, Color.white, header); Start = Text(startP, h2, Color.white, start); Exit = Text(exitP, h2, Color.white, exit); }
 
     let update state events =
         match mouseClick events with 
-        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Exit  -> MainMenuEvent.Exit
-        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Start -> MainMenuEvent.StartGame
-        | _ -> MainMenuEvent.None state
+        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Exit  -> Scenes.Exit
+        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Start -> Scenes.InitGamePlay
+        | _ -> Scenes.MainMenuScene state
 
     let draw state = Graphics([state.Header; state.Start; state.Exit])
