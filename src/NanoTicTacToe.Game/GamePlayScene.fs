@@ -53,26 +53,47 @@ module GamePlayScene =
     let private winAiMainDiagnal (grid: (int * int * Cell) list) =  (Grid.get grid 0 0)::(Grid.get grid 1 1)::(Grid.get grid 2 2)::[] |> List.forall(fun (cell) -> match cell with | Occupied(AI _) -> true | _ -> false)
     let private winAiSecondDiagnal (grid: (int * int * Cell) list) =  (Grid.get grid 2 0)::(Grid.get grid 1 1)::(Grid.get grid 0 2)::[] |> List.forall(fun (cell) -> match cell with | Occupied(AI _) -> true | _ -> false)
 
-    let init api settings = 
-        let back = api.LoadTexture("Sprites/Back")
-        let x = api.LoadTexture("Sprites/X")
-        let o = api.LoadTexture("Sprites/O")
-        let font = api.LoadFont("Fonts/H1")
-        let (Vector(width, height)) =  Texture.size back
-        let position = Vector.init ((settings.ScreenWidth / 2.0f) - (width / 2.0f)) ((settings.ScreenHeight / 2.0f) - (height / 2.0f))
+    let init state events = 
 
-        { 
-            Content = { X = x; O = o; Font = font; }
-            Grid = grid
-            Origin = position
-            Status = Playing
-            Move = Human(X)
-            Back = { Sprite = Sprite(position, back, Vector.init 1.0f 1.0f); CellWidth = width / 3.0f; CellHeight = height / 3.0f }
-        }
+        let fonts = events |> List.map (fun event -> match event with | ContentEvent(FontLoaded(path, font)) -> Some (path, font) | _ -> None) |> List.filter Option.isSome |> List.map Option.get
+        let textures = events |> List.map (fun event -> match event with | ContentEvent(TextureLoaded(path, texture)) -> Some (path, texture) | _ -> None) |> List.filter Option.isSome |> List.map Option.get
+        let fonts = state.Fonts@fonts
+        let textures = state.Textures@textures
+
+        if fonts |> List.exists (fun (path, _) -> path = "Fonts/H1") |> not
+            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [ContentCommand(LoadFont "Fonts/H1")])
+        elif textures |> List.exists (fun (path, _) -> path = "Sprites/Back") |> not
+            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [ContentCommand(LoadTexture "Sprites/Back")])
+        elif textures |> List.exists (fun (path, _) -> path = "Sprites/X") |> not
+            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [ContentCommand(LoadTexture "Sprites/X")])
+        elif textures |> List.exists (fun (path, _) -> path = "Sprites/O") |> not
+            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [ContentCommand(LoadTexture "Sprites/O")])
+        else 
+            let screenWidth = 1920.0f<pixel>
+            let screenHeight = 1080.0f<pixel>
+
+            let back = textures |> List.filter (fun (path, _) -> path = "Sprites/Back") |> List.map (fun (_, font) -> font) |> List.exactlyOne
+            let x = textures |> List.filter (fun (path, _) -> path = "Sprites/X") |> List.map (fun (_, font) -> font) |> List.exactlyOne
+            let o = textures |> List.filter (fun (path, _) -> path = "Sprites/O") |> List.map (fun (_, font) -> font) |> List.exactlyOne
+            let font = fonts |> List.filter (fun (path, _) -> path = "Fonts/H1") |> List.map (fun (_, font) -> font) |> List.exactlyOne
+
+            let (Vector(width, height)) =  Texture.size back
+            let position = Vector.init ((screenWidth / 2.0f) - (width / 2.0f)) ((screenHeight / 2.0f) - (height / 2.0f))
+
+            let state =
+                { 
+                    Content = { X = x; O = o; Font = font; }
+                    Grid = grid
+                    Origin = position
+                    Move = Human(X)
+                    Back = { Sprite = Sprite(position, back, Vector.init 1.0f 1.0f); CellWidth = width / 3.0f; CellHeight = height / 3.0f }
+                    FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, font, Color.red, ""))
+                }
+            (GamePlayScene state,[])
 
     let update state events =
-        match state.Status with
-        | Playing -> 
+        match state with
+        | GamePlayScene state -> 
             match state.Move with
             | Human(sym) -> 
                 match mouseClick events with
@@ -88,35 +109,50 @@ module GamePlayScene =
                         let grid = Grid.update state.Grid raw column (Occupied(state.Move))                                
 
                         if [0..2] |> List.exists (winHumanRaw grid) || [0..2] |> List.exists (winHumanColumn grid) || (winHumanMainDiagnal grid) || (winHumanSecondDiagnal grid)
-                            then { state with Grid = grid; Move = AI(O); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Victory")); } 
+                            then 
+                                (GamePlaySceneFinish({ state with Grid = grid; Move = AI(O);FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Victory")) }), [])
                             elif grid |> List.forall (fun (_, _, cell) -> match cell with | Occupied _ -> true | _ -> false) 
-                                then { state with Grid = grid; Move = AI(O); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")); } 
-                            else { state with Grid = grid; Move = AI(O) }
+                                then 
+                                    (GamePlaySceneFinish({ state with Grid = grid; Move = AI(O); FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")) }), [])
+                            else 
+                                (GamePlayScene({ state with Grid = grid; Move = AI(O) }), [])
 
-                    | _ -> state
-                | _ -> state
+                    | _ -> (GamePlayScene state, [])
+                | _ -> (GamePlayScene state, [])
 
             | AI(sym) -> 
                 let (raw, column, _) = state.Grid |> List.filter (fun (_, _, cell) -> match cell with | Empty _ -> true | _ -> false) |> List.maxBy (fun (_, _, (Empty value)) -> value)
                 let grid = Grid.update state.Grid raw column (Occupied(state.Move))
                 
                 if [0..2] |> List.exists (winAiRaw grid) || [0..2] |> List.exists (winAiColumn grid) || (winAiMainDiagnal grid) || (winAiSecondDiagnal grid)
-                    then { state with Grid = grid; Move = Human(X); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Defeat")); } 
+                    then 
+                        (GamePlaySceneFinish({ state with Grid = grid; Move = Human(X); FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Defeat")); }), [])
                     elif grid |> List.forall (fun (_, _, cell) -> match cell with | Occupied _ -> true | _ -> false) 
-                        then { state with Grid = grid; Move = Human(X); Status = Finish (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")); } 
-                    else { state with Grid = grid; Move = Human(X) }
+                        then 
+                            (GamePlaySceneFinish ({ state with Grid = grid; Move = Human(X); FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")) }), [])
+                    else 
+                        (GamePlayScene({ state with Grid = grid; Move = Human(X) }), [])
 
-        | Finish _ -> 
+        | GamePlaySceneFinish state -> 
             match mouseClick events with
-            | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) -> { state with Grid = grid; Status = Playing; }
-            | _ -> state
+            | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) -> (GamePlayScene({ state with Grid = grid; }), [])
+            | _ -> (GamePlaySceneFinish state, [])
 
-    let draw state = 
-        let grid = state.Grid
+    let draw state =
+        match state with
+        | GamePlayScene state -> 
+            let grid = state.Grid
                     |> List.map (fun (raw, column, cell) -> map (float32 raw) (float32 column) cell state.Content.Font state.Content.X state.Content.O state.Origin state.Back.CellWidth state.Back.CellHeight)
                     |> Seq.cast<Graphics>
                     |> Seq.toList
                     |> Graphics
-        match state.Status with
-        | Playing -> Graphics(state.Back.Sprite::grid::[])
-        | Finish message -> Graphics(state.Back.Sprite::grid::message::[])
+        
+            Graphics(state.Back.Sprite::grid::[])
+        | GamePlaySceneFinish state -> 
+            let grid = state.Grid
+                    |> List.map (fun (raw, column, cell) -> map (float32 raw) (float32 column) cell state.Content.Font state.Content.X state.Content.O state.Origin state.Back.CellWidth state.Back.CellHeight)
+                    |> Seq.cast<Graphics>
+                    |> Seq.toList
+                    |> Graphics
+
+            Graphics(state.Back.Sprite::grid::state.FinishMessage::[])

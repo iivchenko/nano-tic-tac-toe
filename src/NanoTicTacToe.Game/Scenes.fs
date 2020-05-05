@@ -5,14 +5,21 @@ open Flame.Graphics
 open Flame.Content
 
 type MainMenuSceneState = 
-    { Header: Graphics 
-      Start:  Graphics 
+    { Header: Graphics
+      Start:  Graphics
       Exit:   Graphics }
+
+type MainMenuInitState = 
+    { Resources: (string * Font) list }
 
 type MainMenuEvent =
     | Continue of state: MainMenuSceneState
     | StartGame
     | Exit
+
+type GamePlayInitState = 
+    { Textures: (string * Texture) list
+      Fonts: (string * Font) list }
 
 type Sym = | X | O
 type Player = | AI of Sym | Human of Sym
@@ -31,23 +38,21 @@ type GamePlayBackInfo =
       CellWidth: float32<pixel>
       CellHeight: float32<pixel> }
     
-type GamePlayStatus = | Playing | Finish of message: Graphics
-    
 type GamePlaySceneState = 
     { Content: GamePlaySceneContent
       Origin: Vector<pixel>
       Grid: (int * int * Cell) list
       Back: GamePlayBackInfo
-      Status: GamePlayStatus
-      Move: Player }
+      Move: Player 
+      FinishMessage: Graphics }
     
 type GamePlayEvent =
     | Continue of state:GamePlaySceneState
     | Exit
 
-type Scenes = 
-    | InitMainMenu
+type GameState = 
+    | InitMainMenu of state: MainMenuInitState
     | MainMenuScene of state: MainMenuSceneState
-    | InitGamePlay
+    | InitGamePlay of state: GamePlayInitState
     | GamePlayScene of state: GamePlaySceneState
-    | Exit
+    | GamePlaySceneFinish of state: GamePlaySceneState
