@@ -5,10 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Scenes.fs" />
+    <Compile Include="MainMenuState.fs" />
+    <Compile Include="GamePlayState.fs" />
+    <Compile Include="GameState.fs" />
     <Compile Include="MainMenuScene.fs" />
     <Compile Include="GamePlayScene.fs" />
-    <Compile Include="Scene.fs" />
+    <Compile Include="GameScene.fs" />
   </ItemGroup>
 
   <ItemGroup>

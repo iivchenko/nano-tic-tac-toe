@@ -6,6 +6,6 @@ open NanoTicTacToe.Game
 let main _ =
     let state = GameState.InitMainMenu { Resources = [] }
 
-    Game.run state Scene.update Scene.draw
+    Game.run state GameScene.update GameScene.draw
 
     0
