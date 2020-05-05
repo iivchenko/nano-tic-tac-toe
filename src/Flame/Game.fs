@@ -42,14 +42,14 @@ type GameEvent =
     | Mouse of event: MouseEvent
 
 type Game<'TState> (
-                    state: 'TState, 
+                    init: unit -> 'TState, 
                     update: 'TState -> GameEvent list -> float32<second> -> ('TState * GameCommand list),
                     draw: 'TState -> float32<second> -> Graphics option) as this =
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new GraphicsDeviceManager(this)
 
-    let mutable state = state
+    let mutable state = init()
     let mutable mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState()
     let mutable events = []
     let mutable spriteBatch = Unchecked.defaultof<SpriteBatch>
@@ -130,6 +130,6 @@ type Game<'TState> (
         | _ -> ()
 
 module Game = 
-    let run (state: 'TState) (update: 'TState -> GameEvent list -> float32<second> ->  ('TState * GameCommand list)) (draw: 'TState -> float32<second> -> Graphics option) = 
-        let game = new Game<'TState>(state, update, draw)
+    let run (init: unit -> 'TState) (update: 'TState -> GameEvent list -> float32<second> ->  ('TState * GameCommand list)) (draw: 'TState -> float32<second> -> Graphics option) = 
+        let game = new Game<'TState>(init, update, draw)
         game.Run()

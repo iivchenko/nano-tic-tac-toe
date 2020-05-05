@@ -2,6 +2,8 @@
 
 module GameScene = 
 
+    let init () = InitMainMenu { Resources = [] }
+
     let update state events _ = 
 
         match state with 
