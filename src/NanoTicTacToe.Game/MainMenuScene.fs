@@ -7,17 +7,17 @@ open Flame.Input
 
 module MainMenuScene = 
 
-    let private mouseClick events = events |> List.tryFind (fun event -> match event with | GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, _)) -> true | _ -> false)
+    let private mouseClick events = events |> List.tryFind (fun event -> match event with | MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, _) -> true | _ -> false)
 
     let init state events = 
 
-        let fonts = events |> List.map (fun event -> match event with | ContentEvent(FontLoaded(path, font)) -> Some (path, font) | _ -> None) |> List.filter Option.isSome |> List.map Option.get
+        let fonts = events |> List.map (fun event -> match event with | FontLoadedEvent(path, font) -> Some (path, font) | _ -> None) |> List.filter Option.isSome |> List.map Option.get
         let resources = state.Resources@fonts
 
         if resources |> List.exists (fun (path, _) -> path = "Fonts/H1") |> not
-            then (InitMainMenu({ state with Resources = resources; }), [ContentCommand(LoadFont "Fonts/H1")])
+            then (InitMainMenu({ state with Resources = resources; }), [LoadFontCommand "Fonts/H1"])
         elif resources |> List.exists (fun (path, _) -> path = "Fonts/H2") |> not
-            then (InitMainMenu({ state with Resources = resources; }), [ContentCommand(LoadFont "Fonts/H2")])
+            then (InitMainMenu({ state with Resources = resources; }), [LoadFontCommand "Fonts/H2"])
         else 
             let screenWidth = 1920.0f<pixel>
             let screenHeight = 1080.0f<pixel>
@@ -40,8 +40,8 @@ module MainMenuScene =
 
     let update state events =
         match mouseClick events with 
-        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Exit  -> (GameState.MainMenuScene state, [GameCommand.ExitCommand])
-        | Some(GameEvent.Mouse(MouseEvent.Button(Left, MouseButtonState.Released, position))) when Graphics.inBounds position state.Start -> (GameState.InitGamePlay({ Textures = []; Fonts = [] }), [])
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Exit  -> (GameState.MainMenuScene state, [ExitGameCommand])
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> (GameState.InitGamePlay({ Textures = []; Fonts = [] }), [])
         | _ -> (GameState.MainMenuScene state, [])
 
     let draw state = Graphics([state.Header; state.Start; state.Exit])

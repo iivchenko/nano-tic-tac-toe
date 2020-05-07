@@ -7,7 +7,13 @@ type MouseButtonState =
     | Released
     | Pressed
 
-module MouseInput =
+[<RequireQualifiedAccess>]
+type MouseButton = 
+    | Left
+    | Middle
+    | Right
+
+module internal MouseInput =
 
     let internal toButtonState (button: ButtonState) = 
         match button with 

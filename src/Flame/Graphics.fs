@@ -25,7 +25,7 @@ type Graphics =
 
 module Graphics =
 
-    let toXna (Color(r, g, b, a)) =  Microsoft.Xna.Framework.Color(r, g, b, a)
+    let private toXna (Color(r, g, b, a)) =  Microsoft.Xna.Framework.Color(r, g, b, a)
     
     let rec private drawIn (spriteBatch: SpriteBatch) (graphics: Graphics) =
         match graphics with 

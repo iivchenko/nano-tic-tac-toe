@@ -14,11 +14,14 @@ type GamePlaySceneContent =
       Font: Font }
 
 type Sym = | X | O
-type Player = | AI of Sym | Human of Sym
+type Player = | AI | Player
+
     
 type Cell =
     | Empty of value: int
-    | Occupied of Player
+    | Occupied of player: Player * sym: Sym
+
+type PlayerActionStatus = | PlayerMoved of grid: (int * int * Cell) list| PlayerThinking
     
 type GamePlayBackInfo = 
     { Sprite: Graphics
@@ -34,5 +37,5 @@ type GamePlayState =
       FinishMessage: Graphics }
     
 type GamePlaySceneState =
-    | Continue of state:GamePlayState
-    | Finish of state:GamePlayState
+    | Play   of state: GamePlayState
+    | Finish of state: GamePlayState
