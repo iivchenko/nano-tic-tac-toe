@@ -42,7 +42,7 @@ module MainMenuScene =
 
                 let sound = getSound "SoundFX/button-click" events
 
-                (MainMenuScene({ Header = Text(headerP, h1, Color.white, header); Start = Text(startP, h2, Color.white, start); Exit = Text(exitP, h2, Color.white, exit); ClickSound = sound }), [])
+                (MainMenuScene({ Header = Text(headerP, h1, Color.black, header); Start = Text(startP, h2, Color.black, start); Exit = Text(exitP, h2, Color.black, exit); ClickSound = sound }), [])
 
     let update state events =
 

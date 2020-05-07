@@ -127,7 +127,7 @@ type Game<'TState> (
         
         match draw state (delta gameTime) with
         | Some g -> 
-            graphics.GraphicsDevice.Clear(XnaColor.CornflowerBlue)
+            graphics.GraphicsDevice.Clear(XnaColor.White)
             Graphics.draw spriteBatch g
         | _ -> ()
 
