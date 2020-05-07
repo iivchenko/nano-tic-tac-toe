@@ -11,18 +11,27 @@ type XnaSpriteBatch = Microsoft.Xna.Framework.Graphics.SpriteBatch
 type XnaGameTime = Microsoft.Xna.Framework.GameTime
 type XnaFont =  Microsoft.Xna.Framework.Graphics.SpriteFont
 type XnaTexture = Microsoft.Xna.Framework.Graphics.Texture2D
+type XnaSound = Microsoft.Xna.Framework.Audio.SoundEffect
+type XnaSong = Microsoft.Xna.Framework.Media.Song
+type XnaMediaplayer = Microsoft.Xna.Framework.Media.MediaPlayer
 type XnaColor =  Microsoft.Xna.Framework.Color
 
 type GameCommand =
     | UpdateScreenSizeCommand of width: int * height: int
     | LoadFontCommand         of path: string
     | LoadTextureCommand      of path: string
+    | LoadSoundCommand        of path: string
+    | LoadSongCommand         of path: string
+    | PlaySoundCommand        of sound: Sound
+    | PlaySongCommand         of song: Song
     | ExitGameCommand
 
 type GameEvent =
     | ScreenSizeUpdatedEvent of width: int * height: int
     | FontLoadedEvent        of path: string * sprite: Font
     | TextureLoadedEvent     of path: string * texture: Texture
+    | SoundLoadedEvent       of path: string * sound: Sound
+    | SongLoadedEvent        of path: string * song: Song
     | MouseMovedEvent        of position: Vector<pixel>
     | MouseButtonEvent       of button: MouseButton * state: MouseButtonState * position: Vector<pixel>
 
@@ -63,8 +72,24 @@ type Game<'TState> (
             let texture = this.Content.Load<XnaTexture>(path) |> Texture
             Some <| TextureLoadedEvent(path, texture)
 
+        | LoadSoundCommand path -> 
+            let sound = this.Content.Load<XnaSound>(path) |> Sound
+            Some <| SoundLoadedEvent(path, sound)
+
+        | LoadSongCommand path -> 
+            let song = this.Content.Load<XnaSong>(path) |> Song
+            Some <| SongLoadedEvent(path, song)
+
+        | PlaySoundCommand (Sound(sound)) ->
+            do sound.Play() |> ignore
+            None
+
+        | PlaySongCommand (Song(song)) -> 
+            do XnaMediaplayer.Play(song)
+            None
+
         | ExitGameCommand -> 
-            this.Exit()
+            do this.Exit()
             None
 
     let handleCommands commands = commands |> List.map handleCommand |> List.filter Option.isSome |> List.map Option.get

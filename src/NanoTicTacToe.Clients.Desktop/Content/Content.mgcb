@@ -34,6 +34,12 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/H3.spritefont
 
+#begin SoundFX/button-click.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:SoundFX/button-click.ogg;SoundFX/button-click.ogg
+
 #begin Sprites/back.png
 /importer:TextureImporter
 /processor:TextureProcessor

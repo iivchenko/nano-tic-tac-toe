@@ -2,7 +2,7 @@
 
 module GameScene = 
 
-    let init () = InitMainMenu { Resources = [] }
+    let init () = InitMainMenu { FirstRun = true }
 
     let update state events _ = 
 
