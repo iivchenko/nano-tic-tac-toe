@@ -33,7 +33,7 @@ type GamePlayState =
       Origin: Vector<pixel>
       Grid: (int * int * Cell) list
       Back: GamePlayBackInfo
-      Move: Player 
+      CurrentPlayer: Player 
       FinishMessage: Graphics }
     
 type GamePlaySceneState =

@@ -11,6 +11,11 @@ module Grid =
     let update grid raw column cell = grid |> List.map (fun (x, y, i) -> if raw = x && column = y then (x, y, cell) else (x, y, i))
     let get grid raw column = grid |> List.filter (fun (x, y, _) -> raw = x && column = y) |> List.map (fun (_, _, cell) -> cell) |> List.exactlyOne
 
+module AI = 
+    let move grid =
+        let (raw, column, _) = grid |> List.filter (fun (_, _, cell) -> match cell with | Empty _ -> true | _ -> false) |> List.maxBy (fun (_, _, (Empty value)) -> value)
+        (raw, column)
+
 module GamePlayScene = 
 
     let private initGrid = 
@@ -47,25 +52,24 @@ module GamePlayScene =
         | Some(MouseButtonEvent(button, state, position)) when check button state position -> action button state position
         | _ -> defaultAction()
 
-    let private map row column value font xs os (Vector(x, y)) (width:float32<pixel>) (height:float32<pixel>) =
+    let private map raw column value font xs os (Vector(x, y)) (width:float32<pixel>) (height:float32<pixel>) =
         match value with
         | Empty v -> 
             let (Vector(fW, fH)) = Font.length font (sprintf "%i" v)
             let x = x + width * column + width / 2.0f - fW / 2.0f
-            let y = y + height * row + height / 2.0f - fH / 2.0f
+            let y = y + height * raw + height / 2.0f - fH / 2.0f
             Text(Vector.init x y, font, Color.grey, sprintf "%i" v)
-        | Occupied(AI, a) 
-        | Occupied(Player, a) ->
-            match a with 
+        | Occupied(_, sym) ->
+            match sym with 
             | X -> 
                 let (Vector(xW, xH)) = Texture.size xs
                 let x = x + width  * column + width / 2.0f - xW / 2.0f
-                let y = y + height * row + height / 2.0f - xH / 2.0f
+                let y = y + height * raw + height / 2.0f - xH / 2.0f
                 Sprite(Vector.init x y, xs, Vector.init 1.0f 1.0f)
             | O -> 
                 let (Vector(oW, oH)) = Texture.size os
                 let x = x + width  * column + width / 2.0f - oW / 2.0f
-                let y = y + height * row + height / 2.0f - oH / 2.0f
+                let y = y + height * raw + height / 2.0f - oH / 2.0f
                 Sprite(Vector.init x y, os, Vector.init 1.0f 1.0f)
 
     let private (| PlayerWon | AiWon | Tie | ContinueGame |) grid =
@@ -81,10 +85,7 @@ module GamePlayScene =
         elif grid |> List.exists (fun (_, _, cell) -> match cell with | Empty _ -> true | _ -> false) then ContinueGame
         else Tie
 
-    let private play   = Play   >> GamePlayScene
-    let private finish = Finish >> GamePlayScene
-
-    let private playerMove state position = 
+    let private makeMove state position = 
         let (Vector(x,y)) = position
         let (Vector(xo, yo)) = state.Origin
         let column = (x - xo) / state.Back.CellWidth |> int
@@ -92,10 +93,21 @@ module GamePlayScene =
         let cell = Grid.get state.Grid raw column 
 
         match cell with
-        | Empty _ -> PlayerMoved <| Grid.update state.Grid raw column (Occupied(state.Move, X))
+        | Empty _ -> PlayerMoved <| Grid.update state.Grid raw column (Occupied(state.CurrentPlayer, X))
         | _       -> PlayerThinking
 
-    let nextPlayer = function | Player -> AI | AI -> Player
+    let private nextPlayer = function | Player -> AI | AI -> Player
+
+    let private message state text = 
+        let (Vector(width, _)) = Font.length state.Content.Font text
+        let x = 1920.0f<pixel> / 2.0f - width / 2.0f
+        let y = 1080.0f<pixel> * 0.1f
+
+        Text(Vector.init x y, state.Content.Font, Color.red, text)
+
+    let private play   = Play   >> GamePlayScene
+    let private finish = Finish >> GamePlayScene
+    let private restart state = play { state with Grid = initGrid; }
 
     let init state events = 
 
@@ -129,7 +141,7 @@ module GamePlayScene =
                     Content = { X = x; O = o; Font = font; }
                     Grid = initGrid
                     Origin = position
-                    Move = Player
+                    CurrentPlayer = Player
                     Back = { Sprite = Sprite(position, back, Vector.init 1.0f 1.0f); CellWidth = width / 3.0f; CellHeight = height / 3.0f }
                     FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, font, Color.red, ""))
                 }
@@ -139,34 +151,34 @@ module GamePlayScene =
         match state with
         | Play state -> 
             let status = 
-                match state.Move with
+                match state.CurrentPlayer with
                 | Player -> 
                     let back = state.Back.Sprite
                     onMouseButtonEvent 
                         (fun button state position -> button = MouseButton.Left && state = MouseButtonState.Released && Graphics.inBounds position back) 
-                        (fun _ _ position -> playerMove state position) 
+                        (fun _ _ position -> makeMove state position) 
                         (fun () -> PlayerThinking) 
                         events
 
                 | AI -> 
-                    let (raw, column, _) = state.Grid |> List.filter (fun (_, _, cell) -> match cell with | Empty _ -> true | _ -> false) |> List.maxBy (fun (_, _, (Empty value)) -> value)
-                    Grid.update state.Grid raw column (Occupied(state.Move, O)) |> PlayerMoved
+                    let (raw, column) = AI.move state.Grid 
+                    Grid.update state.Grid raw column (Occupied(AI, O)) |> PlayerMoved
             
             match status with 
             | PlayerThinking -> (play state, [])
             | PlayerMoved grid -> 
-                let player = nextPlayer state.Move
+                let player = nextPlayer state.CurrentPlayer
                 match grid with 
-                | ContinueGame -> (play { state with Grid = grid; Move = player }, [])
-                | Tie -> (finish { state with Grid = grid; Move = player; FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "A draw")) }, [])
-                | PlayerWon -> (finish { state with Grid = grid; Move = player; FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Victory")) }, [])
-                | AiWon -> (finish { state with Grid = grid; Move = player; FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, state.Content.Font, Color.red, "Defeat")); }, [])
+                | ContinueGame -> (play   { state with Grid = grid; CurrentPlayer = player }, [])
+                | Tie          -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "A draw" }, [])
+                | PlayerWon    -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "Victory" }, [])
+                | AiWon        -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "Defeat"; }, [])
 
         | Finish state -> 
             onMouseButtonEvent
                 (fun _ state _ -> state = MouseButtonState.Released) 
-                (fun _ _ _ -> (play { state with Grid = initGrid; }, [])) 
-                (fun () -> (finish state, [])) 
+                (fun _ _ _     -> (restart state, [])) 
+                (fun ()        -> (finish state, [])) 
                 events
 
     let draw state =
