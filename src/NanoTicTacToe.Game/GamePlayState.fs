@@ -5,13 +5,13 @@ open Flame.Graphics
 open Flame.Content
 
 type GamePlayInitState = 
-    { Textures: (string * Texture) list
-      Fonts: (string * Font) list }
+    { FirstRun: bool }
 
 type GamePlaySceneContent =
     { X: Texture
       O: Texture 
-      Font: Font }
+      Font: Font 
+      MoveSound: Sound }
 
 type Sym = | X | O
 type Player = | AI | Player
@@ -33,8 +33,9 @@ type GamePlayState =
       Origin: Vector<pixel>
       Grid: (int * int * Cell) list
       Back: GamePlayBackInfo
-      CurrentPlayer: Player 
-      FinishMessage: Graphics }
+      CurrentPlayer: Player
+      FinishMessage: Graphics 
+      MoveDelay: float32<second>}
     
 type GamePlaySceneState =
     | Play   of state: GamePlayState

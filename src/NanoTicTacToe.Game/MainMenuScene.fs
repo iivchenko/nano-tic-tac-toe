@@ -17,7 +17,7 @@ module MainMenuScene =
         let (_, sound) = events |> List.map (fun event -> match event with | SoundLoadedEvent(p, sound) when path = p -> Some (p, sound) | _ -> None) |> List.filter Option.isSome |> List.map Option.get |> List.exactlyOne
         sound
 
-    let init state events = 
+    let init (state: MainMenuInitState) events = 
 
         if state.FirstRun 
             then 
@@ -48,7 +48,7 @@ module MainMenuScene =
 
         match mouseClick events with 
         | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Exit  -> (GameState.MainMenuScene state, [PlaySoundCommand state.ClickSound; ExitGameCommand])
-        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> (GameState.InitGamePlay({ Textures = []; Fonts = [] }), [PlaySoundCommand state.ClickSound])
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> (GameState.InitGamePlay({ FirstRun = true; }), [PlaySoundCommand state.ClickSound])
         | _ -> (GameState.MainMenuScene state, [])
 
     let draw state = Graphics([state.Header; state.Start; state.Exit])

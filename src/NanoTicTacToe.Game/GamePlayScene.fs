@@ -110,45 +110,50 @@ module GamePlayScene =
     let private restart state = play { state with Grid = initGrid; }
 
     let init state events = 
+        let getFont path events = 
+            let (_, font) = events |> List.map (fun event -> match event with | FontLoadedEvent(p, font) when path = p -> Some (p, font) | _ -> None) |> List.filter Option.isSome |> List.map Option.get |> List.exactlyOne
+            font
 
-        let fonts = events |> List.map (fun event -> match event with | FontLoadedEvent(path, font) -> Some (path, font) | _ -> None) |> List.filter Option.isSome |> List.map Option.get
-        let textures = events |> List.map (fun event -> match event with | TextureLoadedEvent(path, texture) -> Some (path, texture) | _ -> None) |> List.filter Option.isSome |> List.map Option.get
-        let fonts = state.Fonts@fonts
-        let textures = state.Textures@textures
+        let getSound path events = 
+            let (_, sound) = events |> List.map (fun event -> match event with | SoundLoadedEvent(p, sound) when path = p -> Some (p, sound) | _ -> None) |> List.filter Option.isSome |> List.map Option.get |> List.exactlyOne
+            sound
 
-        if fonts |> List.exists (fun (path, _) -> path = "Fonts/H1") |> not
-            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [LoadFontCommand "Fonts/H1"])
-        elif textures |> List.exists (fun (path, _) -> path = "Sprites/Back") |> not
-            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [LoadTextureCommand "Sprites/Back"])
-        elif textures |> List.exists (fun (path, _) -> path = "Sprites/X") |> not
-            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [LoadTextureCommand "Sprites/X"])
-        elif textures |> List.exists (fun (path, _) -> path = "Sprites/O") |> not
-            then (InitGamePlay({ state with Fonts = fonts; Textures = textures; }), [LoadTextureCommand "Sprites/O"])
-        else 
-            let screenWidth = 1920.0f<pixel>
-            let screenHeight = 1080.0f<pixel>
+        let getTexture path events = 
+            let (_, texture) = events |> List.map (fun event -> match event with | TextureLoadedEvent(p, texture) when path = p -> Some (p, texture) | _ -> None) |> List.filter Option.isSome |> List.map Option.get |> List.exactlyOne
+            texture
 
-            let back = textures |> List.filter (fun (path, _) -> path = "Sprites/Back") |> List.map (fun (_, font) -> font) |> List.exactlyOne
-            let x = textures |> List.filter (fun (path, _) -> path = "Sprites/X") |> List.map (fun (_, font) -> font) |> List.exactlyOne
-            let o = textures |> List.filter (fun (path, _) -> path = "Sprites/O") |> List.map (fun (_, font) -> font) |> List.exactlyOne
-            let font = fonts |> List.filter (fun (path, _) -> path = "Fonts/H1") |> List.map (fun (_, font) -> font) |> List.exactlyOne
+        if state.FirstRun 
+            then 
+                (InitGamePlay({ FirstRun = false; }), [LoadFontCommand "Fonts/H1"; LoadTextureCommand "Sprites/Back"; LoadTextureCommand "Sprites/X"; LoadTextureCommand "Sprites/O"; LoadSoundCommand "SoundFX/button-click"])
+            else 
+                let screenWidth = 1920.0f<pixel>
+                let screenHeight = 1080.0f<pixel>
 
-            let (Vector(width, height)) =  Texture.size back
-            let position = Vector.init ((screenWidth / 2.0f) - (width / 2.0f)) ((screenHeight / 2.0f) - (height / 2.0f))
+                let back = getTexture "Sprites/Back" events
+                let x = getTexture "Sprites/X" events
+                let o = getTexture "Sprites/O" events
+                let font = getFont "Fonts/H1" events
+                let sound = getSound "SoundFX/button-click" events
 
-            let state =
-                { 
-                    Content = { X = x; O = o; Font = font; }
-                    Grid = initGrid
-                    Origin = position
-                    CurrentPlayer = Player
-                    Back = { Sprite = Sprite(position, back, Vector.init 1.0f 1.0f); CellWidth = width / 3.0f; CellHeight = height / 3.0f }
-                    FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, font, Color.red, ""))
-                }
-            (play state,[])
+                let (Vector(width, height)) =  Texture.size back
+                let position = Vector.init ((screenWidth / 2.0f) - (width / 2.0f)) ((screenHeight / 2.0f) - (height / 2.0f))
 
-    let update state events =
+                let state =
+                    { 
+                        Content = { X = x; O = o; Font = font; MoveSound = sound; }
+                        Grid = initGrid
+                        Origin = position
+                        CurrentPlayer = Player
+                        Back = { Sprite = Sprite(position, back, Vector.init 1.0f 1.0f); CellWidth = width / 3.0f; CellHeight = height / 3.0f }
+                        FinishMessage = (Text(Vector.init 0.0f<pixel> 0.0f<pixel>, font, Color.red, ""))
+                        MoveDelay = 0.0f<second>
+                    }
+                (play state,[])
+
+    let update state events delta =
         match state with
+        | Play state when state.MoveDelay > 0.0f<second> ->
+            (play { state with MoveDelay = state.MoveDelay - delta }, [])
         | Play state -> 
             let status = 
                 match state.CurrentPlayer with
@@ -169,7 +174,7 @@ module GamePlayScene =
             | PlayerMoved grid -> 
                 let player = nextPlayer state.CurrentPlayer
                 match grid with 
-                | ContinueGame -> (play   { state with Grid = grid; CurrentPlayer = player }, [])
+                | ContinueGame -> (play   { state with Grid = grid; CurrentPlayer = player; MoveDelay = 0.35f<second> }, [PlaySoundCommand state.Content.MoveSound])
                 | Tie          -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "A draw" }, [])
                 | PlayerWon    -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "Victory" }, [])
                 | AiWon        -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "Defeat"; }, [])
