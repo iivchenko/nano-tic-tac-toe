@@ -1,4 +1,0 @@
-nuget FSharp.Core
-nuget MonoGame.Framework.DesktopGL.Core
-nuget MonoGame.Content.Builder
-nuget Microsoft.Extensions.FileProviders.Embedded

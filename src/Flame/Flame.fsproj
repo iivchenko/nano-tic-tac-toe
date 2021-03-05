@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Units.fs" />
@@ -14,5 +14,8 @@
     <Compile Include="KeyboardInput.fs" />
     <Compile Include="Game.fs" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="4.7.1" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641"/>
+  </ItemGroup>
 </Project>
