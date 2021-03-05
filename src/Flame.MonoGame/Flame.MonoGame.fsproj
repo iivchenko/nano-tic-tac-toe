@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="MonoGameTypes.fs" />
     <Compile Include="MonoGameMouseInput.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Graphics.fs" />

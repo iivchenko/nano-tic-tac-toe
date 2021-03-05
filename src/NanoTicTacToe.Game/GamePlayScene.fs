@@ -63,12 +63,12 @@ module GamePlayScene =
         | Occupied(_, sym) ->
             match sym with 
             | X -> 
-                let (Vector(xW, xH)) = Texture.size xs
+                let (Texture(_, xW, xH)) = xs
                 let x = x + width  * column + width / 2.0f - xW / 2.0f
                 let y = y + height * raw + height / 2.0f - xH / 2.0f
                 Sprite(Vector.init x y, xs, Vector.init 1.0f 1.0f)
             | O -> 
-                let (Vector(oW, oH)) = Texture.size os
+                let (Texture(_, oW, oH)) = os
                 let x = x + width  * column + width / 2.0f - oW / 2.0f
                 let y = y + height * raw + height / 2.0f - oH / 2.0f
                 Sprite(Vector.init x y, os, Vector.init 1.0f 1.0f)
@@ -136,7 +136,7 @@ module GamePlayScene =
                 let font = getFont "Fonts/H1" events
                 let sound = getSound "SoundFX/button-click" events
 
-                let (Vector(width, height)) =  Texture.size back
+                let (Texture(_, width, height)) = back
                 let position = Vector.init ((screenWidth / 2.0f) - (width / 2.0f)) ((screenHeight / 2.0f) - (height / 2.0f))
 
                 let state =

@@ -5,18 +5,7 @@ open Flame.Content
 open Flame.Graphics
 open Flame.Input
 open Flame.MonoGame.Input
-
-type XnaGraphicsDeviceManager = Microsoft.Xna.Framework.GraphicsDeviceManager
-type XnaMouse = Microsoft.Xna.Framework.Input.Mouse
-type XnaMouseState = Microsoft.Xna.Framework.Input.MouseState
-type XnaSpriteBatch = Microsoft.Xna.Framework.Graphics.SpriteBatch
-type XnaGameTime = Microsoft.Xna.Framework.GameTime
-type XnaFont =  Microsoft.Xna.Framework.Graphics.SpriteFont
-type XnaTexture = Microsoft.Xna.Framework.Graphics.Texture2D
-type XnaSound = Microsoft.Xna.Framework.Audio.SoundEffect
-type XnaSong = Microsoft.Xna.Framework.Media.Song
-type XnaMediaplayer = Microsoft.Xna.Framework.Media.MediaPlayer
-type XnaColor =  Microsoft.Xna.Framework.Color
+open System.Collections.Generic
 
 type GameCommand =
     | UpdateScreenSizeCommand of width: int * height: int
@@ -44,6 +33,7 @@ type Game<'TState> (
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new XnaGraphicsDeviceManager(this)
+    let content = new Dictionary<string, XnaTexture>()
 
     let mutable state = init()
     let mutable mouseState = XnaMouse.GetState()
@@ -71,7 +61,9 @@ type Game<'TState> (
             Some <| FontLoadedEvent(path, font)
 
         | LoadTextureCommand path -> 
-            let texture = this.Content.Load<XnaTexture>(path) |> Texture
+            let xnaTexture = this.Content.Load<XnaTexture>(path) 
+            content.Add(path, xnaTexture)
+            let texture = Texture(path, xnaTexture.Width |> float32 |> (*) 1.0f<pixel>, xnaTexture.Height |> float32 |> (*) 1.0f<pixel>)
             Some <| TextureLoadedEvent(path, texture)
 
         | LoadSoundCommand path -> 
@@ -130,7 +122,7 @@ type Game<'TState> (
         match draw state (delta gameTime) with
         | Some g -> 
             graphics.GraphicsDevice.Clear(XnaColor.White)
-            Graphics.draw spriteBatch g
+            Graphics.draw spriteBatch g content
         | _ -> ()
 
 module Game = 
