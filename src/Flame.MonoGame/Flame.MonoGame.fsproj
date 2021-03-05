@@ -5,10 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="GameEvents.fs" />
     <Compile Include="MonoGameTypes.fs" />
-    <Compile Include="MonoGameMouseInput.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="MonoGameMouseInput.fs" />
     <Compile Include="Graphics.fs" />
+    <Compile Include="GameCommands.fs" />
     <Compile Include="Game.fs" />
   </ItemGroup>
 

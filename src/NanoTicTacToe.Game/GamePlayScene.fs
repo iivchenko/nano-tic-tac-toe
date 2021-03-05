@@ -110,6 +110,26 @@ module GamePlayScene =
     let private finish = Finish >> GamePlayScene
     let private restart state = play { state with Grid = initGrid; }
 
+    let private draw state =
+           match state with
+           | Play state -> 
+                let grid = state.Grid
+                           |> List.map (fun (raw, column, cell) -> map (float32 raw) (float32 column) cell state.Content.Font state.Content.X state.Content.O state.Origin state.Back.CellWidth state.Back.CellHeight)
+                           |> Seq.cast<Graphics>
+                           |> Seq.toList
+                           |> Graphics
+           
+                DrawCommand(Graphics(state.Back.Sprite::grid::[]))
+               
+           | Finish state -> 
+               let grid = state.Grid
+                       |> List.map (fun (raw, column, cell) -> map (float32 raw) (float32 column) cell state.Content.Font state.Content.X state.Content.O state.Origin state.Back.CellWidth state.Back.CellHeight)
+                       |> Seq.cast<Graphics>
+                       |> Seq.toList
+                       |> Graphics
+
+               DrawCommand(Graphics(state.Back.Sprite::grid::state.FinishMessage::[]))
+
     let init state events = 
         let getFont path events = 
             let (_, font) = events |> List.map (fun event -> match event with | FontLoadedEvent(p, font) when path = p -> Some (p, font) | _ -> None) |> List.filter Option.isSome |> List.map Option.get |> List.exactlyOne
@@ -153,55 +173,38 @@ module GamePlayScene =
 
     let update state events delta =
         match state with
-        | Play state when state.MoveDelay > 0.0f<second> ->
-            (play { state with MoveDelay = state.MoveDelay - delta }, [])
-        | Play state -> 
+        | Play state' when state'.MoveDelay > 0.0f<second> ->
+            (play { state' with MoveDelay = state'.MoveDelay - delta }, [draw state])
+        | Play state' -> 
             let status = 
-                match state.CurrentPlayer with
+                match state'.CurrentPlayer with
                 | Player -> 
-                    let back = state.Back.Sprite
+                    let back = state'.Back.Sprite
                     onMouseButtonEvent 
                         (fun button state position -> button = MouseButton.Left && state = MouseButtonState.Released && Graphics.inBounds position back) 
-                        (fun _ _ position -> makeMove state position) 
+                        (fun _ _ position -> makeMove state' position) 
                         (fun () -> PlayerThinking) 
                         events
 
                 | AI -> 
-                    let (raw, column) = AI.move state.Grid 
-                    Grid.update state.Grid raw column (Occupied(AI, O)) |> PlayerMoved
-            
-            match status with 
-            | PlayerThinking -> (play state, [])
-            | PlayerMoved grid -> 
-                let player = nextPlayer state.CurrentPlayer
-                match grid with 
-                | ContinueGame -> (play   { state with Grid = grid; CurrentPlayer = player; MoveDelay = 0.35f<second> }, [PlaySoundCommand state.Content.MoveSound])
-                | Tie          -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "A draw" }, [])
-                | PlayerWon    -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "Victory" }, [])
-                | AiWon        -> (finish { state with Grid = grid; CurrentPlayer = player; FinishMessage = message state "Defeat"; }, [])
+                    let (raw, column) = AI.move state'.Grid 
+                    Grid.update state'.Grid raw column (Occupied(AI, O)) |> PlayerMoved
 
-        | Finish state -> 
+            match status with 
+            | PlayerThinking -> (play state', [draw state])
+            | PlayerMoved grid -> 
+                let player = nextPlayer state'.CurrentPlayer
+                match grid with 
+                | ContinueGame -> (play   { state' with Grid = grid; CurrentPlayer = player; MoveDelay = 0.35f<second> }, [PlaySoundCommand state'.Content.MoveSound; draw state])
+                | Tie          -> (finish { state' with Grid = grid; CurrentPlayer = player; FinishMessage = message state' "A draw" }, [draw state])
+                | PlayerWon    -> (finish { state' with Grid = grid; CurrentPlayer = player; FinishMessage = message state' "Victory" }, [draw state])
+                | AiWon        -> (finish { state' with Grid = grid; CurrentPlayer = player; FinishMessage = message state' "Defeat"; }, [draw state])
+
+        | Finish state' -> 
             onMouseButtonEvent
                 (fun _ state _ -> state = MouseButtonState.Released) 
-                (fun _ _ _     -> (restart state, [])) 
-                (fun ()        -> (finish state, [])) 
+                (fun _ _ _     -> (restart state', [draw state])) 
+                (fun ()        -> (finish state', [draw state])) 
                 events
 
-    let draw state =
-        match state with
-        | Play state -> 
-            let grid = state.Grid
-                    |> List.map (fun (raw, column, cell) -> map (float32 raw) (float32 column) cell state.Content.Font state.Content.X state.Content.O state.Origin state.Back.CellWidth state.Back.CellHeight)
-                    |> Seq.cast<Graphics>
-                    |> Seq.toList
-                    |> Graphics
-        
-            Graphics(state.Back.Sprite::grid::[])
-        | Finish state -> 
-            let grid = state.Grid
-                    |> List.map (fun (raw, column, cell) -> map (float32 raw) (float32 column) cell state.Content.Font state.Content.X state.Content.O state.Origin state.Back.CellWidth state.Back.CellHeight)
-                    |> Seq.cast<Graphics>
-                    |> Seq.toList
-                    |> Graphics
-
-            Graphics(state.Back.Sprite::grid::state.FinishMessage::[])
+   

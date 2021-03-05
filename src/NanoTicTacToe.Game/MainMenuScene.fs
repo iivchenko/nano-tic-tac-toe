@@ -18,6 +18,8 @@ module MainMenuScene =
         let (_, sound) = events |> List.map (fun event -> match event with | SoundLoadedEvent(p, sound) when path = p -> Some (p, sound) | _ -> None) |> List.filter Option.isSome |> List.map Option.get |> List.exactlyOne
         sound
 
+    let private draw state = DrawCommand(Graphics([state.Header; state.Start; state.Exit]))
+
     let init (state: MainMenuInitState) events = 
 
         if state.FirstRun 
@@ -48,8 +50,10 @@ module MainMenuScene =
     let update state events =
 
         match mouseClick events with 
-        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Exit  -> (GameState.MainMenuScene state, [PlaySoundCommand state.ClickSound; ExitGameCommand])
-        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> (GameState.InitGamePlay({ FirstRun = true; }), [PlaySoundCommand state.ClickSound])
-        | _ -> (GameState.MainMenuScene state, [])
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Exit  -> 
+            (GameState.MainMenuScene state, [PlaySoundCommand state.ClickSound; ExitGameCommand])
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> 
+            (GameState.InitGamePlay({ FirstRun = true; }), [PlaySoundCommand state.ClickSound])
+        | _ -> (GameState.MainMenuScene state, [draw state])
 
-    let draw state = Graphics([state.Header; state.Start; state.Exit])
+    

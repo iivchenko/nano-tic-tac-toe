@@ -2,34 +2,14 @@
 
 open Flame
 open Flame.Content
-open Flame.Graphics
 open Flame.Input
 open Flame.MonoGame.Input
 open System.Collections.Generic
 
-type GameCommand =
-    | UpdateScreenSizeCommand of width: int * height: int
-    | LoadFontCommand         of path: string
-    | LoadTextureCommand      of path: string
-    | LoadSoundCommand        of path: string
-    | LoadSongCommand         of path: string
-    | PlaySoundCommand        of sound: Sound
-    | PlaySongCommand         of song: Song
-    | ExitGameCommand
-
-type GameEvent =
-    | ScreenSizeUpdatedEvent of width: int * height: int
-    | FontLoadedEvent        of path: string * sprite: Font
-    | TextureLoadedEvent     of path: string * texture: Texture
-    | SoundLoadedEvent       of path: string * sound: Sound
-    | SongLoadedEvent        of path: string * song: Song
-    | MouseMovedEvent        of position: Vector<pixel>
-    | MouseButtonEvent       of button: MouseButton * state: MouseButtonState * position: Vector<pixel>
-
 type Game<'TState> (
                     init: unit -> 'TState, 
-                    update: 'TState -> GameEvent list -> float32<second> -> ('TState * GameCommand list),
-                    draw: 'TState -> float32<second> -> Graphics option) as this =
+                    update: 'TState -> GameEvent list -> float32<second> -> ('TState * GameCommand list)) as this =
+
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new XnaGraphicsDeviceManager(this)
@@ -38,6 +18,7 @@ type Game<'TState> (
     let mutable state = init()
     let mutable mouseState = XnaMouse.GetState()
     let mutable events = []
+    let mutable commands = []
     let mutable spriteBatch = Unchecked.defaultof<XnaSpriteBatch>
 
     let delta (gameTime: XnaGameTime) = (float32 gameTime.ElapsedGameTime.TotalSeconds * 1.0f<second>)
@@ -95,8 +76,15 @@ type Game<'TState> (
         | ExitGameCommand -> 
             do this.Exit()
             None
+        | DrawCommand(_) -> 
+            failwith "This command shoudl not be handled here!" // TODO: Improve
 
     let handleCommands commands = commands |> List.map handleCommand |> List.filter Option.isSome |> List.map Option.get
+
+    let isDraw command =
+        match command with
+        | DrawCommand(_) -> true
+        | _ -> false
 
     override _.LoadContent() =
         this.Content.RootDirectory <- "Content"       
@@ -118,24 +106,22 @@ type Game<'TState> (
             let mouseEvents = handleMouseInput mouseState mouseState'
             mouseState <- mouseState'
 
-            let (state', commands) = update state (events@mouseEvents) (delta gameTime)
+            let (state', commands') = update state (events@mouseEvents) (delta gameTime)
 
+            commands <- commands'
             state <- state'
-            events <- commands |> handleCommands
+            events <- commands |> List.where (fun x -> x |> isDraw |> not)  |> handleCommands
 
         | false -> ()
 
         base.Update(gameTime)
 
     override _.Draw (gameTime: XnaGameTime) =
-        
-        match draw state (delta gameTime) with
-        | Some g -> 
-            graphics.GraphicsDevice.Clear(XnaColor.White)
-            Graphics.draw spriteBatch g content
-        | _ -> ()
+
+        graphics.GraphicsDevice.Clear(XnaColor.White)
+        commands |> List.where (fun x -> x |> isDraw)  |> List.iter (fun (DrawCommand(g)) -> Graphics.draw spriteBatch g content)
 
 module Game = 
-    let run (init: unit -> 'TState) (update: 'TState -> GameEvent list -> float32<second> ->  ('TState * GameCommand list)) (draw: 'TState -> float32<second> -> Graphics option) = 
-        let game = new Game<'TState>(init, update, draw)
+    let run (init: unit -> 'TState) (update: 'TState -> GameEvent list -> float32<second> ->  ('TState * GameCommand list)) = 
+        let game = new Game<'TState>(init, update)
         game.Run()
