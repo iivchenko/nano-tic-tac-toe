@@ -20,11 +20,11 @@ module MainMenuScene =
 
     let private draw state = DrawCommand(Graphics([state.Header; state.Start; state.Exit]))
 
-    let init (state: MainMenuInitState) events = 
+    let private init (state: MainMenuSceneInitState) events = 
 
         if state.FirstRun 
-            then 
-                (InitMainMenu({ state with FirstRun = false; }), [LoadFontCommand "Fonts/H1"; LoadFontCommand "Fonts/H2"; LoadSoundCommand "SoundFX/button-click"])
+            then
+                (GameState.MainMenuScene(MainMenuInitState({ state with FirstRun = false; })), [LoadFontCommand "Fonts/H1"; LoadFontCommand "Fonts/H2"; LoadSoundCommand "SoundFX/button-click"])
             else 
                 let screenWidth = 1920.0f<pixel>
                 let screenHeight = 1080.0f<pixel>
@@ -45,15 +45,18 @@ module MainMenuScene =
 
                 let sound = getSound "SoundFX/button-click" events
 
-                (MainMenuScene({ Header = Text(headerP, h1, Color.black, header); Start = Text(startP, h2, Color.black, start); Exit = Text(exitP, h2, Color.black, exit); ClickSound = sound }), [])
+                (GameState.MainMenuScene(MainMenuUpdateState({ Header = Text(headerP, h1, Color.black, header); Start = Text(startP, h2, Color.black, start); Exit = Text(exitP, h2, Color.black, exit); ClickSound = sound })), [])
+
+    let updateInt state events = 
+        match mouseClick events with 
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Exit  -> 
+            (GameState.MainMenuScene (MainMenuUpdateState state), [PlaySoundCommand state.ClickSound; ExitGameCommand])
+        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> 
+            (GameState.InitGamePlay({ FirstRun = true; }), [PlaySoundCommand state.ClickSound])
+        | _ -> (GameState.MainMenuScene (MainMenuUpdateState state), [draw state])
 
     let update state events =
 
-        match mouseClick events with 
-        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Exit  -> 
-            (GameState.MainMenuScene state, [PlaySoundCommand state.ClickSound; ExitGameCommand])
-        | Some(MouseButtonEvent(MouseButton.Left, MouseButtonState.Released, position)) when Graphics.inBounds position state.Start -> 
-            (GameState.InitGamePlay({ FirstRun = true; }), [PlaySoundCommand state.ClickSound])
-        | _ -> (GameState.MainMenuScene state, [draw state])
-
-    
+        match state with 
+        | MainMenuInitState state -> init state events
+        | MainMenuUpdateState state -> updateInt state events

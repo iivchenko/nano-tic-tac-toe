@@ -3,11 +3,15 @@
 open Flame.Content
 open Flame.Graphics
 
-type MainMenuInitState = 
+type MainMenuSceneInitState = 
     { FirstRun: bool }
 
-type MainMenuSceneState = 
+type MainMenuUpdateState = 
     { Header: Graphics
       Start:  Graphics
       Exit:   Graphics 
       ClickSound: Sound }
+
+type MainMenuSceneState =
+    | MainMenuInitState of state: MainMenuSceneInitState 
+    | MainMenuUpdateState of state: MainMenuUpdateState
