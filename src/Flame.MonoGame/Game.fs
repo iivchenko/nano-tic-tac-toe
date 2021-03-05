@@ -33,7 +33,7 @@ type Game<'TState> (
     inherit Microsoft.Xna.Framework.Game()
 
     let graphics = new XnaGraphicsDeviceManager(this)
-    let content = new Dictionary<string, XnaTexture>()
+    let content = new Dictionary<string, System.Object>()
 
     let mutable state = init()
     let mutable mouseState = XnaMouse.GetState()
@@ -67,19 +67,29 @@ type Game<'TState> (
             Some <| TextureLoadedEvent(path, texture)
 
         | LoadSoundCommand path -> 
-            let sound = this.Content.Load<XnaSound>(path) |> Sound
+            let xnaSound = this.Content.Load<XnaSound>(path)
+            
+            // TODO: Remove this hack when Scenes will have unload or destroy method or something else
+            if content.ContainsKey(path)
+                then content.[path] <- xnaSound
+                else content.Add(path, xnaSound)
+            let sound = Sound(path)
             Some <| SoundLoadedEvent(path, sound)
 
         | LoadSongCommand path -> 
-            let song = this.Content.Load<XnaSong>(path) |> Song
+            let xnaSong = this.Content.Load<XnaSong>(path)
+            content.Add(path, xnaSong)
+            let song = Song(path)
             Some <| SongLoadedEvent(path, song)
 
-        | PlaySoundCommand (Sound(sound)) ->
-            do sound.Play() |> ignore
+        | PlaySoundCommand (Sound(id)) ->
+            let xnaSound = content.[id] :?> XnaSound
+            do xnaSound.Play() |> ignore
             None
 
-        | PlaySongCommand (Song(song)) -> 
-            do XnaMediaplayer.Play(song)
+        | PlaySongCommand (Song(id)) -> 
+            let xnaSong = content.[id] :?> XnaSong
+            do XnaMediaplayer.Play(xnaSong)
             None
 
         | ExitGameCommand -> 

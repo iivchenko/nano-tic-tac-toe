@@ -11,16 +11,16 @@ module Graphics =
 
     let private toXna (Color(r, g, b, a)) =  Microsoft.Xna.Framework.Color(r, g, b, a)
     
-    let rec private drawIn (spriteBatch: XnaSpriteBatch) (graphics: Graphics) (contnet: IDictionary<string, XnaTexture>) =
+    let rec private drawIn (spriteBatch: XnaSpriteBatch) (graphics: Graphics) (contnet: IDictionary<string, System.Object>) =
         match graphics with 
         | Sprite(position, (Texture(id, _, _)), scale) ->
-            let xnaTexture = contnet.[id]
+            let xnaTexture = contnet.[id] :?> XnaTexture
             spriteBatch.Draw(xnaTexture, position |> Utils.toVector2, Nullable<Microsoft.Xna.Framework.Rectangle>(), toXna Color.white, 0.0f, Utils.toVector2 (Vector.init 0.0f 0.0f), Utils.toVector2 scale, XnaSpriteEffects.None, 0.0f)
         | Text(position, (Font(xnaFont)), color, text) ->
             spriteBatch.DrawString(xnaFont, text, position |> Flame.MonoGame.Utils.toVector2, toXna color)
         | Graphics(graphics) -> graphics |>  List.iter (fun x -> drawIn spriteBatch x contnet)
 
-    let public draw (spriteBatch: XnaSpriteBatch) (graphics: Graphics) (content: IDictionary<string, XnaTexture>) = 
+    let public draw (spriteBatch: XnaSpriteBatch) (graphics: Graphics) (content: IDictionary<string, System.Object>) = 
 
         spriteBatch.Begin()
         drawIn spriteBatch graphics content

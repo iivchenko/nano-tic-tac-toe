@@ -6,6 +6,8 @@ open Flame
 
 type Texture = | Texture of id: string * width : float32<pixel> * height: float32<pixel>
 type Font = | Font of font: SpriteFont
+type Sound = | Sound of id: string
+type Song = | Song of id: string
 
 module Font = 
 
@@ -14,6 +16,4 @@ module Font =
 
     let length (Font(font)) (text: string) = font.MeasureString text |> toPixelVector
 
-// TODO: Refactor MonoGame dependencie!
-type Sound = | Sound of sound: Microsoft.Xna.Framework.Audio.SoundEffect
-type Song = | Song of song: Microsoft.Xna.Framework.Media.Song  
+
