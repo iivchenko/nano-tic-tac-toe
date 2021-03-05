@@ -17,6 +17,7 @@
     <None Remove="Content\obj\**" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Flame.MonoGame\Flame.MonoGame.fsproj" />
     <ProjectReference Include="..\Flame\Flame.fsproj" />
     <ProjectReference Include="..\NanoTicTacToe.Game\NanoTicTacToe.Game.fsproj" />
   </ItemGroup>
