@@ -19,10 +19,14 @@ jobs:
       uses: juliangruber/read-file-action@v1
       with:
         path: .\.version
-    - name: Setup .NET Core
+    - name: Setup .NET Core for MonoGame Content Pipeline
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.200
+        dotnet-version: 3.1.x
+    - name: Setup .NET Core for build
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
     - name: Restore tools
       run: dotnet tool restore
     - name: Restore packages
