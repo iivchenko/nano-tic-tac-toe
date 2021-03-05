@@ -4,6 +4,7 @@ open Flame
 open Flame.Graphics
 open Flame.Content
 open Flame.Input
+open Flame.MonoGame
 
 module Grid = 
     let raw grid index = grid |> List.where (fun (raw, _, _) -> raw = index)

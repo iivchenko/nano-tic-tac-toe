@@ -1,8 +1,10 @@
-﻿namespace Flame
+﻿namespace Flame.MonoGame
 
+open Flame
 open Flame.Content
 open Flame.Graphics
 open Flame.Input
+open Flame.MonoGame.Input
 
 type XnaGraphicsDeviceManager = Microsoft.Xna.Framework.GraphicsDeviceManager
 type XnaMouse = Microsoft.Xna.Framework.Input.Mouse
@@ -53,7 +55,7 @@ type Game<'TState> (
     let handleMouseInput (state: XnaMouseState) (state': XnaMouseState) =
         seq {
             yield if state'.Position   <> state.Position   then state'.Position |> Utils.pointToPixelVector |> MouseMovedEvent |> Some else None
-            yield if state'.LeftButton <> state.LeftButton then MouseButtonEvent(MouseButton.Left, state'.LeftButton |> MouseInput.toButtonState, Utils.pointToPixelVector state'.Position) |> Some else None
+            yield if state'.LeftButton <> state.LeftButton then MouseButtonEvent(MouseButton.Left, state'.LeftButton |> MonoGameMouseInput.toButtonState, Utils.pointToPixelVector state'.Position) |> Some else None
         } |> Seq.filter Option.isSome |> Seq.map Option.get |> Seq.toList
 
     let handleCommand command =

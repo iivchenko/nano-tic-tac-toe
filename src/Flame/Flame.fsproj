@@ -7,12 +7,10 @@
     <Compile Include="Units.fs" />
     <Compile Include="Random.fs" />
     <Compile Include="Vector.fs" />
-    <Compile Include="Utils.fs" />
     <Compile Include="Content.fs" />
     <Compile Include="Graphics.fs" />
     <Compile Include="MouseInput.fs" />
     <Compile Include="KeyboardInput.fs" />
-    <Compile Include="Game.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Core" Version="5.0.1" />

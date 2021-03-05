@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="MonoGameMouseInput.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Graphics.fs" />
+    <Compile Include="Game.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Flame\Flame.fsproj" />
   </ItemGroup>
 

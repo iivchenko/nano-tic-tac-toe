@@ -4,17 +4,22 @@ open Microsoft.Xna.Framework.Graphics
 
 open Flame
 
-type Font = internal | Font of font: SpriteFont
+type Font = | Font of font: SpriteFont
 
 module Font = 
 
-    let length (Font(font)) (text: string) = font.MeasureString text |> Utils.toPixelVector
+    // TODO: Refactor MonoGame dependencie!
+    let private toPixelVector (v: Microsoft.Xna.Framework.Vector2) = Vector.init (v.X * 1.0f<pixel>) (v.Y * 1.0f<pixel>)
 
-type Texture = internal | Texture of Texture2D
+    let length (Font(font)) (text: string) = font.MeasureString text |> toPixelVector
+
+// TODO: Refactor MonoGame dependencie!
+type Texture = | Texture of Texture2D
 
 module Texture =
 
     let size (Texture(texture)) = Vector.init (texture.Width |> float32 |> (*) 1.0f<pixel>) (texture.Height |> float32 |> (*) 1.0f<pixel>)
 
-type Sound = internal | Sound of sound: Microsoft.Xna.Framework.Audio.SoundEffect
-type Song = internal | Song of song: Microsoft.Xna.Framework.Media.Song  
+// TODO: Refactor MonoGame dependencie!
+type Sound = | Sound of sound: Microsoft.Xna.Framework.Audio.SoundEffect
+type Song = | Song of song: Microsoft.Xna.Framework.Media.Song  

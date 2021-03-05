@@ -4,6 +4,7 @@ open Flame
 open Flame.Content
 open Flame.Graphics
 open Flame.Input
+open Flame.MonoGame
 
 module MainMenuScene = 
 

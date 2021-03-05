@@ -1,4 +1,6 @@
-﻿module internal Flame.Utils
+﻿module internal Flame.MonoGame.Utils
+
+open Flame
 
 let toVector (v: Microsoft.Xna.Framework.Vector2) = Vector.init v.X v.Y
 

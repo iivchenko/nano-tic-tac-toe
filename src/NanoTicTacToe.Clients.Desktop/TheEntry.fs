@@ -1,6 +1,5 @@
-﻿open Flame
-
-open NanoTicTacToe.Game
+﻿open NanoTicTacToe.Game
+open Flame.MonoGame
 
 [<EntryPoint>]
 let main _ =
