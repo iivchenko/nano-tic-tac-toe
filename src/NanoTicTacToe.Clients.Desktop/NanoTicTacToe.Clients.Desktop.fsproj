@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Winexe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp5</TargetFramework>
     <AssemblyName>nano-tic-tac-toe</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
@@ -21,9 +21,9 @@
     <ProjectReference Include="..\NanoTicTacToe.Game\NanoTicTacToe.Game.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.7.1" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641"/>
+    <PackageReference Include="FSharp.Core" Version="5.0.1" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.3" />
   </ItemGroup>
 </Project>
